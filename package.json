@@ -1,0 +1,54 @@
+{
+  "name": "yellow-pages-api",
+  "version": "1.0.0",
+  "main": "src/app.js",
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "scripts": {
+    "start": "node src/app.js",
+    "predocker": "npm run build",
+    "docker": "docker build .",
+    "docker:beta": "npm run docker -- -t api-template:beta",
+    "predocker:runbeta": "npm run docker:beta",
+    "docker:runbeta": "docker run --env-file .env -p 8080:8080 api-template:beta",
+    "image": "docker run -d ",
+    "nodemon": "nodemon",
+    "seed:new": "knex seed:make",
+    "seed": "knex seed:run",
+    "migrate": "knex migrate:latest",
+    "migrate:new": "knex migrate:make",
+    "down": "knex migrate:down",
+    "dev": "nodemon --watch src",
+    "pm2": "pm2 start ./src/app.js --name \"yellow-pages-api\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@fastify/express": "^3.0.0",
+    "@fastify/multipart": "^8.3.0",
+    "@fastify/static": "^7.0.4",
+    "bcrypt": "^6.0.0",
+    "body-parser": "^1.20.2",
+    "compression": "^1.7.4",
+    "dotenv-safe": "^9.1.0",
+    "fastify": "^4.28.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "knex": "^3.1.0",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.10.3"
+  },
+  "imports": {
+    "#src/*": "./src/*.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.7.0",
+    "eslint": "9.x",
+    "globals": "^15.8.0",
+    "nodemon": "^3.1.4"
+  }
+}
