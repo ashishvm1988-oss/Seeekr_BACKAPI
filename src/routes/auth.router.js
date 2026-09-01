@@ -35,6 +35,30 @@ function auth_router(fastify, opts, done) {
             rep.send(res)
         }
     })
+
+    // Both steps of the forgot-password flow are unauthenticated by
+    // design — you don't have a token if you've forgotten your password.
+    fastify.post('/forgot-password', async (req, rep) => {
+        const res = await auth.requestPasswordReset(req);
+        if(res.error){
+            rep.code(500).send(res)
+        } else if (res.message) {
+            rep.code(400).send(res)
+        } else {
+            rep.send(res)
+        }
+    })
+
+    fastify.post('/reset-password', async (req, rep) => {
+        const res = await auth.resetPassword(req);
+        if(res.error){
+            rep.code(500).send(res)
+        } else if (res.message) {
+            rep.code(400).send(res)
+        } else {
+            rep.send(res)
+        }
+    })
     done()
 }
 
