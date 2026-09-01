@@ -16,6 +16,7 @@ const public_routes = {
     '/auth/login': ['POST'],
     '/users': ['POST'],
     '/portfolio': ['GET'],
+    '/credentials': ['GET'],
     '/providers': ['GET'],
 }
 

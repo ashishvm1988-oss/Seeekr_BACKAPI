@@ -9,17 +9,27 @@ const PUBLIC_ROOT = path.join(__dirname, '..', '..', 'public');
 // crafted "profile.php", "../../whatever") gets rejected before it touches disk.
 const ALLOWED_IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
 
+// Credential "proof" uploads (degree certificates, licenses) are commonly
+// scanned as PDFs, so that one type gets its own, slightly wider allowlist —
+// kept separate from ALLOWED_IMAGE_EXTENSIONS so portfolio photos and
+// category icons stay image-only.
+const ALLOWED_PROOF_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.pdf']);
+
 /**
  * Builds a filesystem-safe, collision-proof filename from a user-supplied
  * original name: keeps only a validated extension, discards everything else
  * the caller sent (no path segments, no user-controlled base name).
  */
-function safeImageFilename(originalName) {
+function safeFilename(originalName, allowedExtensions) {
     const ext = path.extname(String(originalName || '')).toLowerCase();
-    if (!ALLOWED_IMAGE_EXTENSIONS.has(ext)) {
-        throw new Error(`Unsupported image type "${ext || '(none)'}". Allowed: ${[...ALLOWED_IMAGE_EXTENSIONS].join(', ')}`);
+    if (!allowedExtensions.has(ext)) {
+        throw new Error(`Unsupported file type "${ext || '(none)'}". Allowed: ${[...allowedExtensions].join(', ')}`);
     }
     return `${crypto.randomUUID()}${ext}`;
+}
+
+function safeImageFilename(originalName) {
+    return safeFilename(originalName, ALLOWED_IMAGE_EXTENSIONS);
 }
 
 /**
@@ -59,6 +69,21 @@ module.exports.writeIconImage = async function(type, file_name, data) {
     if (!fs.existsSync(icon_path)) fs.mkdirSync(icon_path, { recursive: true });
     const stream = fs.createWriteStream(path.join(icon_path, safeName));
     await data.file.pipe(stream);
+    return safeName;
+};
+
+/**
+ * Writes a multipart file part that's already been buffered (via
+ * `part.toBuffer()`), allowing PDFs in addition to images — used for
+ * credential "proof" uploads, where the upload is optional and the handler
+ * has to read the whole multipart stream itself (see credential.handler.js)
+ * rather than relying on request.file()'s "first file part" shortcut.
+ */
+module.exports.writeProofFile = async function(type, filename, buffer) {
+    const safeName = safeFilename(filename, ALLOWED_PROOF_EXTENSIONS);
+    const icon_path = resolveWithinPublic(type, 'icon');
+    if (!fs.existsSync(icon_path)) fs.mkdirSync(icon_path, { recursive: true });
+    await fs.promises.writeFile(path.join(icon_path, safeName), buffer);
     return safeName;
 };
 
