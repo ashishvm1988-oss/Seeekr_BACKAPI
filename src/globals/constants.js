@@ -12,7 +12,8 @@ const table_names = {
     click_analytics: 'click_analytics',
     portfolio_images: 'portfolio_images',
     provider_subcategories: 'provider_subcategories',
-    subscriptions: 'subscriptions'
+    subscriptions: 'subscriptions',
+    provider_credentials: 'provider_credentials'
 }
 
 const user_roles = {
