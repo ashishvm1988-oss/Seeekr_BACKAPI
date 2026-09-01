@@ -16,8 +16,10 @@ const category_router = require('#src/routes/category.router');
 const subcategory_router = require('#src/routes/subcategory.router');
 const messages_router = require('#src/routes/messages.router');
 const portfolio_router = require('#src/routes/portfolio.router');
+const credential_router = require('#src/routes/credential.router');
 const provider_search_router = require('#src/routes/provider_search.router');
 const subscription_router = require('#src/routes/subscription.router');
+const db = require('#src/helpers/db');
 
 // LOADING CONFIGS
 require('#src/helpers/env')();
@@ -91,25 +93,52 @@ app.register(subcategory_router, { prefix: '/sub-category' });
 app.register(click_analytics_router, { prefix: '/click_analytics' });
 app.register(messages_router, { prefix: '/messages' });
 app.register(portfolio_router, { prefix: '/portfolio' });
+app.register(credential_router, { prefix: '/credentials' });
 app.register(provider_search_router, { prefix: '/providers' });
 app.register(subscription_router, { prefix: '/subscriptions' });
 
 app.register(require('@fastify/express')).then(() => {
     app.use(morgan(loadstring));
-    app.use(helmet());
+    // Helmet's default Cross-Origin-Resource-Policy is "same-origin", which
+    // silently blocks the browser from loading anything under /public/
+    // (portfolio photos, credential proof files) when the API is on a
+    // different origin than the web app (api.seeekr.com vs seeekr.com) —
+    // exactly this app's real deployment. These files are meant to be
+    // publicly embeddable, so relax it to "cross-origin" rather than
+    // disabling the policy check on other routes.
+    app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
     app.use(bodyParser.urlencoded({ extended: false }))
     app.use(compression());
 
-    app.listen({ port, host: '0.0.0.0' }, (err) => {
-        if (err) {
-            console.error(err)
-            process.exit(1)
-        }
-        const message = [
-            ['SERVER IS RUNNING'],
-            ['ENV', process.env.NODE_ENV],
-            ['PORT', port],
-        ]
-        console.table(message);
-    })
+    // No separate deploy step runs `knex migrate:latest` (Railway just does
+    // `npm start`), so the app brings the schema up to date itself before
+    // it starts accepting traffic. Safe to run on every boot — knex tracks
+    // which migrations already ran and this is a no-op when there's
+    // nothing pending.
+    db.migrate.latest()
+        .then(([, migrationsRun]) => {
+            if (migrationsRun.length) {
+                console.log('Migrations applied:', migrationsRun.map(f => path.basename(f)));
+            }
+            startServer();
+        })
+        .catch((err) => {
+            console.error('Migration failed — refusing to start:', err);
+            process.exit(1);
+        });
+
+    function startServer() {
+        app.listen({ port, host: '0.0.0.0' }, (err) => {
+            if (err) {
+                console.error(err)
+                process.exit(1)
+            }
+            const message = [
+                ['SERVER IS RUNNING'],
+                ['ENV', process.env.NODE_ENV],
+                ['PORT', port],
+            ]
+            console.table(message);
+        })
+    }
 });
