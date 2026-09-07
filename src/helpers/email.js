@@ -60,6 +60,7 @@ async function sendPasswordResetEmail(toEmail, resetUrl) {
         text:
           `We received a request to reset your Seeekr password.\n\n` +
           `Reset it here (this link expires in 30 minutes):\n${resetUrl}\n\n` +
+          `If you requested this more than once, only the link in the most recent email will work — earlier links stop working as soon as a new one is requested.\n\n` +
           `If you didn't request this, you can safely ignore this email.`,
         html:
           `<p>We received a request to reset your Seeekr password.</p>` +
@@ -68,6 +69,8 @@ async function sendPasswordResetEmail(toEmail, resetUrl) {
           `font-weight:600;">Reset password</a></p>` +
           `<p>Or paste this link into your browser (expires in 30 minutes):<br>` +
           `<a href="${resetUrl}">${resetUrl}</a></p>` +
+          `<p style="color:#6b6f80;font-size:13px;">If you requested this more than once, only the link in the ` +
+          `most recent email will work — earlier links stop working as soon as a new one is requested.</p>` +
           `<p>If you didn't request this, you can safely ignore this email.</p>`,
       }),
     });
