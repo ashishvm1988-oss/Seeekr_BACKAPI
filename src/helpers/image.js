@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { pipeline } = require('stream/promises');
 
 const PUBLIC_ROOT = path.join(__dirname, '..', '..', 'public');
 
@@ -68,7 +69,15 @@ module.exports.writeIconImage = async function(type, file_name, data) {
     const icon_path = resolveWithinPublic(type, 'icon');
     if (!fs.existsSync(icon_path)) fs.mkdirSync(icon_path, { recursive: true });
     const stream = fs.createWriteStream(path.join(icon_path, safeName));
-    await data.file.pipe(stream);
+    // `.pipe()` returns the destination WriteStream, not a Promise — awaiting
+    // it used to resolve immediately (on the next microtask), long before the
+    // upload had actually finished streaming to disk. That race meant the
+    // handler could insert the DB row and respond success while the file was
+    // still empty or partially written — exactly what "the photo I just
+    // uploaded shows up blank" looks like, especially for larger files or a
+    // slower connection. `pipeline()` properly waits for the write to finish
+    // (and cleans up + rejects on any read/write error) before resolving.
+    await pipeline(data.file, stream);
     return safeName;
 };
 
