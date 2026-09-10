@@ -3,6 +3,7 @@ const { table_names, user_roles } = require('#src/globals/constants');
 const db = require('#src/helpers/db');
 const { startTrialSubscription } = require('#src/helpers/subscription');
 const { syncProviderServices } = require('#src/helpers/provider_services');
+const { writeIconImage } = require('#src/helpers/image');
 
 const SALT_ROUNDS = 12;
 
@@ -13,7 +14,7 @@ const SALT_ROUNDS = 12;
 const PUBLIC_USER_COLUMNS = [
   'id', 'username', 'email', 'role', 'contact', 'about',
   'location', 'current_location', 'country_code', 'city',
-  'google_id', 'insta_id', 'deleted'
+  'google_id', 'insta_id', 'deleted', 'avatar_url'
 ];
 
 class UserHandler {
@@ -133,6 +134,38 @@ class UserHandler {
     } catch (error) {
       console.error('user.update: ', error)
       return { error }
+    }
+  }
+
+  // Open to any logged-in user, not just providers — a customer may
+  // reasonably want a real photo too — but this is the one feature the
+  // provider profile page actually needs it for.
+  static async uploadAvatar(request) {
+    try {
+      const file = await request.file();
+      if (!file) {
+        return { message: 'No image file provided' };
+      }
+
+      let safeName;
+      try {
+        safeName = await writeIconImage('avatar', file.filename, file);
+      } catch (validationError) {
+        // Unsupported extension etc. — a 400 with a clear reason, not a 500.
+        return { message: validationError.message };
+      }
+      const avatar_url = `/public/avatar/icon/${safeName}`;
+
+      await db(table_names.users).where({ id: request.user.id }).update({ avatar_url });
+
+      const updatedUser = await db(table_names.users)
+        .select(PUBLIC_USER_COLUMNS)
+        .where({ id: request.user.id }).first();
+
+      return { data: updatedUser };
+    } catch (error) {
+      console.error('user.uploadAvatar: ', error);
+      return { error };
     }
   }
 

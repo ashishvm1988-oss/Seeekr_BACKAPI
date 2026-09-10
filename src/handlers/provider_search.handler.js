@@ -59,7 +59,8 @@ class ProviderSearchHandler {
           `${table_names.users}.username`,
           `${table_names.users}.about`,
           `${table_names.users}.city`,
-          `${table_names.users}.contact`
+          `${table_names.users}.contact`,
+          `${table_names.users}.avatar_url`
         )
         .orderBy(`${table_names.users}.id`, 'desc')
         .limit(pageSize)

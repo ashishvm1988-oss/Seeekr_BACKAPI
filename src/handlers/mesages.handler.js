@@ -34,7 +34,7 @@ class MessageHandler {
       }
 
       const users = await db(table_names.users)
-        .select('id', 'username', 'role')
+        .select('id', 'username', 'role', 'avatar_url')
         .whereIn('id', otherIds);
       const userById = Object.fromEntries(users.map(u => [u.id, u]));
 
