@@ -41,6 +41,18 @@ function user_router(fastify, opts, done) {
         }
     })
 
+    // Uploads/replaces the logged-in user's own profile picture.
+    fastify.post('/avatar', async (req, rep) => {
+        const res = await user.uploadAvatar(req);
+        if(res.error){
+            rep.code(500).send(res)
+        } else if (res.message) {
+            rep.code(400).send(res)
+        } else {
+            rep.send(res)
+        }
+    })
+
     fastify.delete('/', async (req, rep) => {
         const res = await user.delete(req);
         if(res.error){
