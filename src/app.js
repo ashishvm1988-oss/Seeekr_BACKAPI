@@ -19,6 +19,8 @@ const portfolio_router = require('#src/routes/portfolio.router');
 const credential_router = require('#src/routes/credential.router');
 const provider_search_router = require('#src/routes/provider_search.router');
 const subscription_router = require('#src/routes/subscription.router');
+const schedule_router = require('#src/routes/schedule.router');
+const schedule_stats_router = require('#src/routes/schedule_stats.router');
 const db = require('#src/helpers/db');
 
 // LOADING CONFIGS
@@ -96,6 +98,8 @@ app.register(portfolio_router, { prefix: '/portfolio' });
 app.register(credential_router, { prefix: '/credentials' });
 app.register(provider_search_router, { prefix: '/providers' });
 app.register(subscription_router, { prefix: '/subscriptions' });
+app.register(schedule_router, { prefix: '/schedule' });
+app.register(schedule_stats_router, { prefix: '/schedule-stats' });
 
 app.register(require('@fastify/express')).then(() => {
     app.use(morgan(loadstring));
