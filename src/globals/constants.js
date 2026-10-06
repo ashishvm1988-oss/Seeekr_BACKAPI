@@ -13,7 +13,9 @@ const table_names = {
     portfolio_images: 'portfolio_images',
     provider_subcategories: 'provider_subcategories',
     subscriptions: 'subscriptions',
-    provider_credentials: 'provider_credentials'
+    provider_credentials: 'provider_credentials',
+    provider_availability: 'provider_availability',
+    schedule_bookings: 'schedule_bookings'
 }
 
 const user_roles = {
