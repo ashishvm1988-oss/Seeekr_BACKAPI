@@ -18,6 +18,8 @@ const public_routes = {
     '/portfolio': ['GET'],
     '/credentials': ['GET'],
     '/providers': ['GET'],
+    '/schedule/availability': ['GET'],
+    '/schedule/slots': ['GET'],
 }
 
 const auth_hook = async (req, rep) => {
