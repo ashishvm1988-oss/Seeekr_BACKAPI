@@ -1,54 +1,22 @@
 const { table_names } = require("#src/globals/constants");
 
-// Taxonomy pulled from the Figma wireframes ("Design & Art", "Events &
-// Entertainment", "Pet Services" subcategory lists were fully shown; the
-// others were top-level only in the designs, so their subcategories below
-// are a reasonable starting set — expect to refine with the client once
-// real provider signups start). Explicitly includes the four categories
-// named as launch priorities: lawyers, accountants, dog walking, music
-// teaching.
+// Flat, specific-profession taxonomy for the Chennai co-working launch (see
+// migration 20261007090000_flatten-categories-chennai.js). Each category has
+// exactly one subcategory with the same name — there's no broad-category
+// drill-down any more, so a fresh/local DB seeded from scratch should match
+// what the migration leaves production in.
 const TAXONOMY = [
-    {
-        name: 'Design & Art',
-        color: '#6366F1',
-        subcategories: ['Graphic Designer', 'Illustrators', 'UI-UX Designers', 'Web Developers', 'App Developers', '3D Modelling', 'Motion Design']
-    },
-    {
-        name: 'Events & Entertainment',
-        color: '#22C55E',
-        subcategories: ['Party Planners/Event Planner', 'Balloon Decor', 'DJs', 'Bartenders', 'Caterers', 'Emcees', 'Dancers & Choreography', 'Event Photographers', 'Wedding Photographers']
-    },
-    {
-        name: 'Business & Consulting',
-        color: '#F59E0B',
-        subcategories: ['Lawyers', 'Accountants', 'Business Consultants', 'Financial Advisors', 'Tax Consultants']
-    },
-    {
-        name: 'Health & Wellbeing',
-        color: '#EF4444',
-        subcategories: ['Physical Therapists', 'Psychologists', 'Nutritionists', 'Yoga Instructors', 'Personal Trainers']
-    },
-    {
-        name: 'Personal Services',
-        color: '#EAB308',
-        subcategories: ['Hair & Beauty', 'Personal Care', 'Home Cleaning', 'Tailoring']
-    },
-    {
-        name: 'Pet Services',
-        color: '#0EA5E9',
-        subcategories: ['Dog Walking', 'Pet Grooming', 'Pet Boarding', 'Pet Trainers', 'Veterinary Services']
-    },
-    {
-        name: 'Upcoming Entrepreneurs',
-        color: '#8B5CF6',
-        subcategories: ['Startup Mentors', 'Business Plan Consultants']
-    },
-    {
-        name: 'Lessons & LifeSkills',
-        color: '#EC4899',
-        subcategories: ['Music Teaching Classes', 'Dance Teachers', 'Language Tutors', 'Academic Tutors', 'Life Coaches']
-    }
-];
+    { name: 'Personal Trainers', color: '#F97316' },
+    { name: 'Physiotherapists', color: '#14B8A6' },
+    { name: 'Yoga Instructors', color: '#8B5CF6' },
+    { name: 'Nannies & Babysitters', color: '#EC4899' },
+    { name: 'Movers & Packers', color: '#F59E0B' },
+    { name: 'Interior Designers', color: '#6366F1' },
+    { name: 'Event Planners', color: '#22C55E' },
+    { name: 'Salon & Grooming at Home', color: '#EF4444' },
+    { name: 'Mental Health Counsellors', color: '#0EA5E9' },
+    { name: 'Financial Advisors', color: '#EAB308' },
+].map(cat => ({ ...cat, subcategories: [cat.name] }));
 
 /**
  * @param { import("knex").Knex } knex
