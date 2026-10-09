@@ -1,5 +1,10 @@
 const { table_names } = require('#src/globals/constants');
 const db = require('#src/helpers/db');
+const { sendNewMessageEmail } = require('#src/helpers/email');
+
+function frontendUrl() {
+  return (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+}
 
 class MessageHandler {
   // List of conversations for the logged-in user: one row per other
@@ -105,6 +110,30 @@ class MessageHandler {
         deleted: false
       });
       const newMessage = await db(table_names.messages).where({ id }).first();
+
+      // Notify by email, but at most once per "unread streak" — if the
+      // receiver already has an earlier unread message from this same
+      // sender, they've already been emailed about this conversation, so a
+      // second email per message would just be noise. An email failure here
+      // must never affect the response to the sender.
+      try {
+        if (receiver.email) {
+          const hasEarlierUnread = await db(table_names.messages)
+            .where({ sender_id: myId, receiver_id, deleted: false })
+            .whereNull('read_at')
+            .andWhere('id', '<>', id)
+            .first();
+          if (!hasEarlierUnread) {
+            await sendNewMessageEmail(receiver.email, {
+              senderName: request.user.username || 'Someone',
+              preview: String(message).trim().slice(0, 140),
+              chatUrl: `${frontendUrl()}/chat/${myId}`,
+            });
+          }
+        }
+      } catch (emailError) {
+        console.error('messages.create: notification email failed: ', emailError);
+      }
 
       return { data: newMessage };
     } catch (error) {

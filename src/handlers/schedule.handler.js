@@ -1,5 +1,32 @@
 const { table_names, user_roles } = require('#src/globals/constants');
 const db = require('#src/helpers/db');
+const { sendBookingRequestEmail, sendBookingResponseEmail } = require('#src/helpers/email');
+
+function frontendUrl() {
+  return (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+}
+
+// 'YYYY-MM-DD' (or a Date/driver value coercible to one) -> "14 October 2026"
+// for email copy. Falls back to the raw value rather than throwing if it's
+// ever something unparseable.
+function formatDateLabel(dateValue) {
+  try {
+    return new Date(dateValue).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+  } catch {
+    return String(dateValue);
+  }
+}
+
+// '14:30' -> '2:30 PM' for email copy (mirrors the frontend's formatTime12h
+// in utils/format.js — kept as its own copy here since this is server code
+// with no access to the frontend bundle).
+function formatTime12hLabel(hhmm) {
+  if (!hhmm) return '';
+  const [h, m] = hhmm.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+}
 
 // Slot times are stored/returned as 'HH:MM' (24-hour). MySQL TIME columns
 // come back from mysql2 as 'HH:MM:SS' strings, never JS Date objects, so
@@ -273,6 +300,22 @@ class ScheduleHandler {
       if (result.message) return result;
 
       const created = await db(table_names.schedule_bookings).where({ id: result.id }).first();
+
+      // Notify the provider by email — never let a delivery failure affect
+      // the booking request itself.
+      try {
+        if (provider.email) {
+          await sendBookingRequestEmail(provider.email, {
+            customerName: request.user.username || 'A customer',
+            dateLabel: formatDateLabel(date),
+            timeLabel: formatTime12hLabel(start),
+            accountUrl: `${frontendUrl()}/account`,
+          });
+        }
+      } catch (emailError) {
+        console.error('schedule.book: notification email failed: ', emailError);
+      }
+
       return { data: created };
     } catch (error) {
       console.error('schedule.book: ', error);
@@ -307,6 +350,24 @@ class ScheduleHandler {
         });
 
       const updated = await db(table_names.schedule_bookings).where({ id }).first();
+
+      // Notify the customer by email — never let a delivery failure affect
+      // the provider's response itself.
+      try {
+        const customer = await db(table_names.users).where({ id: booking.customer_id }).first();
+        if (customer?.email) {
+          await sendBookingResponseEmail(customer.email, {
+            providerName: request.user.username || 'The provider',
+            dateLabel: formatDateLabel(booking.booking_date),
+            timeLabel: formatTime12hLabel(toHHMM(booking.start_time)),
+            status: updated.status,
+            accountUrl: `${frontendUrl()}/account`,
+          });
+        }
+      } catch (emailError) {
+        console.error('schedule.respond: notification email failed: ', emailError);
+      }
+
       return { data: updated };
     } catch (error) {
       console.error('schedule.respond: ', error);
