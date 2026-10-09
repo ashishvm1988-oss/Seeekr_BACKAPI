@@ -1,21 +1,21 @@
 const { table_names } = require("#src/globals/constants");
 
-// Flat, specific-profession taxonomy for the Chennai co-working launch (see
-// migration 20261007090000_flatten-categories-chennai.js). Each category has
-// exactly one subcategory with the same name — there's no broad-category
-// drill-down any more, so a fresh/local DB seeded from scratch should match
-// what the migration leaves production in.
+// Final flat, specific-profession taxonomy for the Chennai co-working
+// launch (see migration 20261009090000_final-chennai-categories.js). Each
+// category has exactly one subcategory with the same name — there's no
+// broad-category drill-down any more, so a fresh/local DB seeded from
+// scratch should match what the migration leaves production in.
 const TAXONOMY = [
-    { name: 'Personal Trainers', color: '#F97316' },
-    { name: 'Physiotherapists', color: '#14B8A6' },
-    { name: 'Yoga Instructors', color: '#8B5CF6' },
-    { name: 'Nannies & Babysitters', color: '#EC4899' },
-    { name: 'Movers & Packers', color: '#F59E0B' },
+    { name: 'Accountants', color: '#EAB308' },
+    { name: 'Legal Advisors', color: '#334155' },
     { name: 'Interior Designers', color: '#6366F1' },
+    { name: 'Tutors', color: '#3B82F6' },
+    { name: 'Personal Trainers', color: '#F97316' },
     { name: 'Event Planners', color: '#22C55E' },
-    { name: 'Salon & Grooming at Home', color: '#EF4444' },
-    { name: 'Mental Health Counsellors', color: '#0EA5E9' },
-    { name: 'Financial Advisors', color: '#EAB308' },
+    { name: 'Yoga Instructors', color: '#8B5CF6' },
+    { name: 'Physiotherapists', color: '#14B8A6' },
+    { name: 'Nutritionists', color: '#84CC16' },
+    { name: 'Wellness Counsellors', color: '#EC4899' },
 ].map(cat => ({ ...cat, subcategories: [cat.name] }));
 
 /**
